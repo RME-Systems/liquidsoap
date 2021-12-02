@@ -6,6 +6,8 @@ export CPU_CORES=$1
 
 eval $(opam config env)
 
+opam install -y re
+
 cd /tmp/liquidsoap-full
 
 echo "\n### Preparing bindings\n"
