@@ -161,7 +161,7 @@ let expand_string tokenizer =
   let add pos x = Queue.add (x, pos) state in
   let pop () = ignore (Queue.take state) in
   let parse s pos =
-    let l = Pcre.split ~pat:"#{(.*?)}" s in
+    let l = Pcre_compat.split ~pat:"#{(.*?)}" s in
     let l = if l = [] then [""] else l in
     let add = add pos in
     let rec parse = function
@@ -227,7 +227,8 @@ let parse_comments tokenizer =
     in
     let doc =
       List.map
-        (fun x -> Pcre.substitute ~pat:"^\\s*#\\s?" ~subst:(fun _ -> "") x)
+        (fun x ->
+          Pcre_compat.substitute ~pat:"^\\s*#\\s?" ~subst:(fun _ -> "") x)
         doc
     in
     let get_args doc =
@@ -246,12 +247,12 @@ let parse_comments tokenizer =
       | line :: lines -> (
           try
             let sub =
-              Pcre.exec
+              Pcre_compat.exec
                 ~pat:"^\\s*@(category|docof|flag|param|method|argsof)\\s*(.*)$"
                 line
             in
-            let s = Pcre.get_substring sub 2 in
-            match Pcre.get_substring sub 1 with
+            let s = Pcre_compat.get_substring sub 2 in
+            match Pcre_compat.get_substring sub 1 with
               | "docof" ->
                   let doc = Environment.builtins#get_subsection s in
                   let main_doc = doc#get_doc in
@@ -278,15 +279,16 @@ let parse_comments tokenizer =
                   let s, only, except =
                     try
                       let sub =
-                        Pcre.exec ~pat:"^\\s*([^\\[]+)\\[([^\\]]+)\\]\\s*$" s
+                        Pcre_compat.exec
+                          ~pat:"^\\s*([^\\[]+)\\[([^\\]]+)\\]\\s*$" s
                       in
-                      let s = Pcre.get_substring sub 1 in
+                      let s = Pcre_compat.get_substring sub 1 in
                       let args =
                         List.filter
                           (fun s -> s <> "")
                           (List.map String.trim
                              (String.split_on_char ','
-                                (Pcre.get_substring sub 2)))
+                                (Pcre_compat.get_substring sub 2)))
                       in
                       let only, except =
                         List.fold_left
@@ -321,9 +323,11 @@ let parse_comments tokenizer =
               | "flag" ->
                   parse_doc (main, `Flag s :: special, params, methods) lines
               | "param" ->
-                  let sub = Pcre.exec ~pat:"^(~?[a-zA-Z0-9_.]+)\\s*(.*)$" s in
-                  let label = Pcre.get_substring sub 1 in
-                  let descr = Pcre.get_substring sub 2 in
+                  let sub =
+                    Pcre_compat.exec ~pat:"^(~?[a-zA-Z0-9_.]+)\\s*(.*)$" s
+                  in
+                  let label = Pcre_compat.get_substring sub 1 in
+                  let descr = Pcre_compat.get_substring sub 2 in
                   let label =
                     if label.[0] = '~' then
                       String.sub label 1 (String.length label - 1)
@@ -334,7 +338,9 @@ let parse_comments tokenizer =
                       | [] -> raise Not_found
                       | line :: lines ->
                           let line =
-                            Pcre.substitute ~pat:"^ *" ~subst:(fun _ -> "") line
+                            Pcre_compat.substitute ~pat:"^ *"
+                              ~subst:(fun _ -> "")
+                              line
                           in
                           let n = String.length line - 1 in
                           if line.[n] = '\\' then (
@@ -349,9 +355,11 @@ let parse_comments tokenizer =
                     (main, special, (label, descr) :: params, methods)
                     lines
               | "method" ->
-                  let sub = Pcre.exec ~pat:"^(~?[a-zA-Z0-9_.]+)\\s*(.*)$" s in
-                  let label = Pcre.get_substring sub 1 in
-                  let descr = Pcre.get_substring sub 2 in
+                  let sub =
+                    Pcre_compat.exec ~pat:"^(~?[a-zA-Z0-9_.]+)\\s*(.*)$" s
+                  in
+                  let label = Pcre_compat.get_substring sub 1 in
+                  let descr = Pcre_compat.get_substring sub 2 in
                   parse_doc
                     (main, special, params, (label, descr) :: methods)
                     lines

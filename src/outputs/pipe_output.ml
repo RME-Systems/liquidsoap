@@ -300,7 +300,7 @@ class virtual ['a] file_output_base p =
       let filename = Utils.strftime filename in
       let filename = Utils.home_unrelate filename in
       (* Avoid / in metas for filename.. *)
-      let subst m = Pcre.substitute ~pat:"/" ~subst:(fun _ -> "-") m in
+      let subst m = Pcre_compat.substitute ~pat:"/" ~subst:(fun _ -> "-") m in
       self#interpolate ~subst filename
 
     method virtual open_out_gen : open_flag list -> int -> string -> 'a

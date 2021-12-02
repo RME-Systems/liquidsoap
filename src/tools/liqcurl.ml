@@ -174,7 +174,8 @@ let rec http_request ?headers ?http_version ~follow_redirect ~timeout ~url
             ~request ~on_body_data ()
       | _ ->
           let response_headers =
-            Pcre.split ~rex:(Pcre.regexp "[\r]?\n")
+            Pcre_compat.split
+              ~rex:(Pcre_compat.regexp "[\r]?\n")
               (Buffer.contents response_headers)
           in
           let protocol_version, status_code, status_message =
@@ -185,9 +186,9 @@ let rec http_request ?headers ?http_version ~follow_redirect ~timeout ~url
               (fun ret header ->
                 if header <> "" then (
                   try
-                    let res = Pcre.exec ~pat:"([^:]*):\\s*(.*)" header in
-                    ( String.lowercase_ascii (Pcre.get_substring res 1),
-                      Pcre.get_substring res 2 )
+                    let res = Pcre_compat.exec ~pat:"([^:]*):\\s*(.*)" header in
+                    ( String.lowercase_ascii (Pcre_compat.get_substring res 1),
+                      Pcre_compat.get_substring res 2 )
                     :: ret
                   with Not_found -> ret)
                 else ret)

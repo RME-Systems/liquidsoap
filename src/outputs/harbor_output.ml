@@ -597,11 +597,11 @@ module Make (T : T) = struct
         let enc = data.factory self#id in
         encoder <- Some (enc Meta_format.empty_metadata);
         let handler ~protocol ~data:_ ~headers ~socket uri =
-          let rex = Pcre.regexp "^(.+)\\?(.+)$" in
+          let rex = Pcre_compat.regexp "^(.+)\\?(.+)$" in
           let _, args =
             try
-              let sub = Pcre.exec ~rex uri in
-              (Pcre.get_substring sub 1, Pcre.get_substring sub 2)
+              let sub = Pcre_compat.exec ~rex uri in
+              (Pcre_compat.get_substring sub 1, Pcre_compat.get_substring sub 2)
             with Not_found -> (uri, "")
           in
           let args = Http.args_split args in

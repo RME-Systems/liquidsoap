@@ -173,7 +173,7 @@ module Make (Transport : Transport_t) = struct
       Bytes.unsafe_to_string s
 
   let url_encode ?(plus = true) s =
-    Pcre.substitute ~pat:"[^A-Za-z0-9_.!*-]"
+    Pcre_compat.substitute ~pat:"[^A-Za-z0-9_.!*-]"
       ~subst:(fun x ->
         if plus && x = " " then "+"
         else (
@@ -189,7 +189,7 @@ module Make (Transport : Transport_t) = struct
       | _ -> raise UrlDecoding
 
   let url_decode ?(plus = true) s =
-    Pcre.substitute
+    Pcre_compat.substitute
       ~pat:
         "\\+|%..|%.|%"
         (* TODO why do we match %. and % and seem to exclude them below ? *)
@@ -206,7 +206,7 @@ module Make (Transport : Transport_t) = struct
   let args_split s =
     let args = Hashtbl.create 2 in
     let fill_arg arg =
-      match Pcre.split ~pat:"=" arg with
+      match Pcre_compat.split ~pat:"=" arg with
         | e :: l ->
             (* There should be only arg=value *)
             List.iter
@@ -214,7 +214,7 @@ module Make (Transport : Transport_t) = struct
               l
         | [] -> ()
     in
-    List.iter fill_arg (Pcre.split ~pat:"&" s);
+    List.iter fill_arg (Pcre_compat.split ~pat:"&" s);
     args
 
   let connect = Transport.connect
@@ -227,32 +227,32 @@ module Make (Transport : Transport_t) = struct
 
   let parse_url url =
     let basic_rex =
-      Pcre.regexp "^([Hh][Tt][Tt][Pp][sS]?)://([^/:]+)(:[0-9]+)?(/.*)?$"
+      Pcre_compat.regexp "^([Hh][Tt][Tt][Pp][sS]?)://([^/:]+)(:[0-9]+)?(/.*)?$"
     in
     let sub =
-      try Pcre.exec ~rex:basic_rex url
+      try Pcre_compat.exec ~rex:basic_rex url
       with Not_found -> (* raise Invalid_url *)
                         failwith "Invalid URL."
     in
-    let protocol = Pcre.get_substring sub 1 in
-    let host = Pcre.get_substring sub 2 in
+    let protocol = Pcre_compat.get_substring sub 1 in
+    let host = Pcre_compat.get_substring sub 2 in
     let port =
       try
-        let port = Pcre.get_substring sub 3 in
+        let port = Pcre_compat.get_substring sub 3 in
         let port = String.sub port 1 (String.length port - 1) in
         let port = int_of_string port in
         Some port
       with Not_found -> None
     in
-    let path = try Pcre.get_substring sub 4 with Not_found -> "/" in
+    let path = try Pcre_compat.get_substring sub 4 with Not_found -> "/" in
     { protocol; host; port; path }
 
-  let is_url path = Pcre.pmatch ~pat:"^[Hh][Tt][Tt][Pp][sS]?://.+" path
+  let is_url path = Pcre_compat.pmatch ~pat:"^[Hh][Tt][Tt][Pp][sS]?://.+" path
 
   let dirname url =
-    let rex = Pcre.regexp "^([Hh][Tt][Tt][Pp][sS]?://.+/)[^/]*$" in
-    let s = Pcre.exec ~rex url in
-    Pcre.get_substring s 1
+    let rex = Pcre_compat.regexp "^([Hh][Tt][Tt][Pp][sS]?://.+/)[^/]*$" in
+    let s = Pcre_compat.exec ~rex url in
+    Pcre_compat.get_substring s 1
 
   let read_with_timeout ?(log = fun _ -> ()) ~timeout socket buflen =
     Transport.wait_for ~log (`Read socket) timeout;
@@ -324,8 +324,8 @@ module Make (Transport : Transport_t) = struct
   (* Read chunked transfer. *)
   let read_chunked ~timeout socket =
     let read = read_crlf ~count:1 ~timeout socket in
-    let len = List.hd (Pcre.split ~pat:"[\r]?\n" read) in
-    let len = List.hd (Pcre.split ~pat:";" len) in
+    let len = List.hd (Pcre_compat.split ~pat:"[\r]?\n" read) in
+    let len = List.hd (Pcre_compat.split ~pat:";" len) in
     let len = int_of_string ("0x" ^ len) in
     let s = really_read socket ~timeout len in
     ignore (read_crlf ~count:1 ~timeout socket);
@@ -338,14 +338,16 @@ module Make (Transport : Transport_t) = struct
       Transport.write socket (Bytes.of_string request) 0 len < len
     then raise Socket;
     let header = read_crlf ~log ~timeout socket in
-    let header = Pcre.split ~pat:"[\r]?\n" header in
+    let header = Pcre_compat.split ~pat:"[\r]?\n" header in
     let response, header =
       match header with e :: tl -> (e, tl) | [] -> raise Response
     in
     let response_http_version, response_status, response_msg =
       let pat = "^((?:HTTP/[0-9.]+)|ICY) ([0-9]+) (.*)$" in
       try
-        let ( !! ) = Pcre.get_substring (Pcre.exec ~pat response) in
+        let ( !! ) =
+          Pcre_compat.get_substring (Pcre_compat.exec ~pat response)
+        in
         (!!1, int_of_string !!2, !!3)
       with Not_found -> raise Response
     in
@@ -354,7 +356,9 @@ module Make (Transport : Transport_t) = struct
       List.fold_left
         (fun fields line ->
           try
-            let ( !! ) = Pcre.get_substring (Pcre.exec ~pat line) in
+            let ( !! ) =
+              Pcre_compat.get_substring (Pcre_compat.exec ~pat line)
+            in
             (String.lowercase_ascii !!1, !!2) :: fields
           with Not_found -> fields)
         [] header

@@ -339,7 +339,7 @@ let () =
       in
       Lang.string
         (if space_sensitive then (
-         let l = Pcre.split ~pat:" " string in
+         let l = Pcre_compat.split ~pat:" " string in
          let l = List.map f l in
          String.concat " " l)
         else f string))

@@ -69,11 +69,11 @@ class chord ~kind metadata_name (source : source) =
               (fun c ->
                 try
                   let sub =
-                    Pcre.exec ~pat:"^([A-G-](?:b|#)?)(|M|m|M7|m7|dim)$" c
+                    Pcre_compat.exec ~pat:"^([A-G-](?:b|#)?)(|M|m|M7|m7|dim)$" c
                   in
-                  let n = Pcre.get_substring sub 1 in
+                  let n = Pcre_compat.get_substring sub 1 in
                   let n = note_of_string n in
-                  let m = Pcre.get_substring sub 2 in
+                  let m = Pcre_compat.get_substring sub 2 in
                   ans := (t, n, m) :: !ans
                 with Not_found ->
                   self#log#important "Could not parse chord '%s'." c)

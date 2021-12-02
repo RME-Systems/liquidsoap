@@ -219,12 +219,12 @@ module VideoSpecs = struct
       | "pixel_aspect" ->
           let pixel_aspect =
             try
-              let rex = Pcre.regexp "(\\d+)/(\\d+)" in
-              let sub = Pcre.exec ~rex value in
+              let rex = Pcre_compat.regexp "(\\d+)/(\\d+)" in
+              let sub = Pcre_compat.exec ~rex value in
               Some
                 {
-                  Avutil.num = int_of_string (Pcre.get_substring sub 1);
-                  den = int_of_string (Pcre.get_substring sub 2);
+                  Avutil.num = int_of_string (Pcre_compat.get_substring sub 1);
+                  den = int_of_string (Pcre_compat.get_substring sub 2);
                 }
             with _ -> None
           in

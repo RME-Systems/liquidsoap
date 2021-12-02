@@ -193,8 +193,8 @@ module Make (Harbor : T) = struct
       method register_decoder mime =
         let mime =
           try
-            let sub = Pcre.exec ~pat:"^([^;]+);.*$" mime in
-            Pcre.get_substring sub 1
+            let sub = Pcre_compat.exec ~pat:"^([^;]+);.*$" mime in
+            Pcre_compat.get_substring sub 1
           with Not_found -> mime
         in
         match Decoder.get_stream_decoder ~ctype:self#ctype mime with
